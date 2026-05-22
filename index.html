@@ -54,23 +54,50 @@
             let display = document.getElementById('data-display');
             let userAgent = navigator.userAgent;
             
-            // 1. Hardware Decoding
-            let deviceModel = "Unknown Hardware";
-            if (/android/i.test(userAgent)) {
-                let match = userAgent.match(/Android\s+([^\s;]+);?\s+([^;\)]+)/);
-                deviceModel = match ? match[2] : "Android Device";
-            } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
-                deviceModel = "Apple iOS Device";
+            // 1. Try Modern Client Hints to bypass the "K" privacy wall
+            let deviceModel = "Unknown Android";
+            
+            if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+                try {
+                    const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion']);
+                    if (hints.model) {
+                        deviceModel = hints.model; // This should grab "RMX3085" etc.
+                    }
+                } catch (e) { /* Fallback if browser blocks it */ }
             }
 
-            let ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown (iOS hides this)";
-            let cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : "Unknown";
-            let screenRes = `${window.screen.width} x ${window.screen.height} px`;
+            // Fallback to older regex parsing if Client Hints aren't supported
+            if (deviceModel === "Unknown Android" || deviceModel === "") {
+                if (/android/i.test(userAgent)) {
+                    let match = userAgent.match(/Android\s+([^\s;]+);?\s+([^;\)]+)/);
+                    deviceModel = match ? match[2] : "Android Device";
+                } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+                    deviceModel = "Apple iOS Device";
+                }
+            }
 
-            // 2. Network & Battery Data Defaults
+            // Fix the generic "K" issue manually if it slips through
+            if (deviceModel === "K" || deviceModel === "Linux") {
+                deviceModel = "Android Device (Model Hidden by Browser)";
+            }
+
+            // 2. Adjusting Resolution to account for Pixel Density
+            let trueWidth = window.screen.width * window.devicePixelRatio;
+            let trueHeight = window.screen.height * window.devicePixelRatio;
+            let screenRes = `${Math.round(trueWidth)} x ${Math.round(trueHeight)} px`;
+
+            // RAM calculation fix note (Browsers natively cap this at 4 or 8)
+            let ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown";
+            if (ram === "4 GB") {
+                ram = "4 GB to 6 GB (Browser Restricted)";
+            }
+
+            let cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : "Unknown";
+
+            // 3. Network & Battery Data
             let batteryLevel = "Locked";
             let isCharging = "Unknown";
-            let networkType = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType.toUpperCase() : "WiFi/Cellular";
+            let networkType = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType.toUpperCase() : "4G/5G";
 
             try {
                 if (navigator.getBattery) {
@@ -80,7 +107,7 @@
                 }
             } catch (e) {}
 
-            // 3. IP and Location Fetch (No permissions required)
+            // 4. IP and Location Fetch
             let ip = "Fetching...";
             let location = "Fetching...";
             let isp = "Fetching...";
@@ -92,21 +119,19 @@
                     ip = ipData.ip || "Hidden";
                     location = `${ipData.city}, ${ipData.region}, ${ipData.country_name}`;
                     isp = ipData.org || "Unknown ISP";
-                } else {
-                    throw new Error();
                 }
             } catch (error) {
-                ip = "Failed to bypass VPN/Firewall";
+                ip = "Failed to bypass Firewall";
                 location = "Location Blocked";
                 isp = "Unknown";
             }
 
-            // 4. Render Everything to Screen
+            // 5. Render Everything to Screen
             display.innerHTML = `
                 > <span class="accent">DEVICE:</span> ${deviceModel}<br>
-                > <span class="accent">RAM SIZE:</span> ~${ram}<br>
+                > <span class="accent">SYSTEM RAM:</span> ~${ram}<br>
                 > <span class="accent">CPU CORES:</span> ${cpuCores}<br>
-                > <span class="accent">RESOLUTION:</span> ${screenRes}<br>
+                > <span class="accent">TRUE RESOLUTION:</span> ${screenRes}<br>
                 -------------------------<br>
                 > <span class="accent">BATTERY:</span> ${batteryLevel} (${isCharging})<br>
                 > <span class="accent">NETWORK:</span> ${networkType}<br>
