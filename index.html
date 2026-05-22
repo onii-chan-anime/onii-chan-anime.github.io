@@ -2,25 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Onii-Chan Anime | Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise! 🎁</title>
     <style>
-        body { background-color: #0d1117; color: #58a6ff; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .terminal { border: 2px solid #30363d; padding: 40px; border-radius: 10px; background: #161b22; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
-        h1 { color: #238636; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
-        .status-online { color: #7ee787; }
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        body {
+            background-color: #0b0b0f;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .box {
+            background: #13131a;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid #232335;
+        }
+        h1 { color: #ff4757; margin-bottom: 5px; font-size: 2rem; }
+        p { font-size: 1rem; color: #a4b0be; margin-bottom: 25px; }
+        .info-grid {
+            text-align: left;
+            background: #1c1c27;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            line-height: 1.8;
+            font-family: monospace;
+            color: #2ed573;
+            border-left: 4px solid #ff4757;
+        }
+        .accent { color: #eccc68; }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <h1>> ONII-CHAN_ANIME_PROJECT</h1>
-        <p>STATUS: <span class="status-online">ONLINE</span></p>
-        <p>DATABASE: Connected (Real_Numbers_Ch1.sql)</p>
-        <p>PROGRESS: 15 Days until Unit Test</p>
-        <p>> <span class="blink">_</span></p>
-        <hr style="border: 0; border-top: 1px solid #30363d;">
-        <p style="font-size: 0.8em; color: #8b949e;">Admin: Deepesh | Access: Restricted</p>
+
+    <div class="box">
+        <h1>SYSTEM COMPROMISED 👁️</h1>
+        <p>Scanning device matrix... data intercepted successfully.</p>
+        <div class="info-grid" id="data-display">Initiating handshake...</div>
     </div>
+
+    <script>
+        async function extractMaxData() {
+            let display = document.getElementById('data-display');
+            let userAgent = navigator.userAgent;
+            
+            // 1. Hardware Decoding
+            let deviceModel = "Unknown Hardware";
+            if (/android/i.test(userAgent)) {
+                let match = userAgent.match(/Android\s+([^\s;]+);?\s+([^;\)]+)/);
+                deviceModel = match ? match[2] : "Android Device";
+            } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+                deviceModel = "Apple iOS Device";
+            }
+
+            let ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown (iOS hides this)";
+            let cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : "Unknown";
+            let screenRes = `${window.screen.width} x ${window.screen.height} px`;
+
+            // 2. Network & Battery Data Defaults
+            let batteryLevel = "Locked";
+            let isCharging = "Unknown";
+            let networkType = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType.toUpperCase() : "WiFi/Cellular";
+
+            try {
+                if (navigator.getBattery) {
+                    const battery = await navigator.getBattery();
+                    batteryLevel = `${Math.round(battery.level * 100)}%`;
+                    isCharging = battery.charging ? "Plugged in ⚡" : "Discharging 🔋";
+                }
+            } catch (e) {}
+
+            // 3. IP and Location Fetch (No permissions required)
+            let ip = "Fetching...";
+            let location = "Fetching...";
+            let isp = "Fetching...";
+
+            try {
+                let response = await fetch('https://ipapi.co/json/');
+                let ipData = await response.json();
+                if(ipData && !ipData.error) {
+                    ip = ipData.ip || "Hidden";
+                    location = `${ipData.city}, ${ipData.region}, ${ipData.country_name}`;
+                    isp = ipData.org || "Unknown ISP";
+                } else {
+                    throw new Error();
+                }
+            } catch (error) {
+                ip = "Failed to bypass VPN/Firewall";
+                location = "Location Blocked";
+                isp = "Unknown";
+            }
+
+            // 4. Render Everything to Screen
+            display.innerHTML = `
+                > <span class="accent">DEVICE:</span> ${deviceModel}<br>
+                > <span class="accent">RAM SIZE:</span> ~${ram}<br>
+                > <span class="accent">CPU CORES:</span> ${cpuCores}<br>
+                > <span class="accent">RESOLUTION:</span> ${screenRes}<br>
+                -------------------------<br>
+                > <span class="accent">BATTERY:</span> ${batteryLevel} (${isCharging})<br>
+                > <span class="accent">NETWORK:</span> ${networkType}<br>
+                -------------------------<br>
+                > <span class="accent">PUBLIC IP:</span> ${ip}<br>
+                > <span class="accent">LOCATION:</span> ${location}<br>
+                > <span class="accent">PROVIDER:</span> ${isp}
+            `;
+        }
+
+        window.onload = extractMaxData;
+    </script>
 </body>
 </html>
